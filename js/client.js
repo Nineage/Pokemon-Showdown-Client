@@ -1,3 +1,22 @@
+function postProxy(a, b, c) {
+	var datastring = "?post=";
+	for (var i in b) {
+		datastring += escape(i) + ":" + escape(b[i]) + "|";
+	}
+	$.get(a + datastring, c);
+}
+function getProxy(ab, c) {
+	var splint = ab.split('?');
+	var datastring = splint[1].split("=").join(":").split("&").join("|");
+	$.get(splint[0] + "?post=" + datastring, c);
+}
+
+//var $link = $('<link rel="stylesheet" href="http://' + Config.server.host + ':' + Config.server.port + '/custom.css" />');
+//$('head').append($link);
+
+var $link = $('<link rel="stylesheet" href="/js/style.css" />');
+$('head').append($link);
+
 (function($) {
 
 	if (window.nodewebkit) {
@@ -83,7 +102,7 @@
 		 * domain in order to have access to the correct cookies.
 		 */
 		getActionPHP: function() {
-			var ret = '/~~' + Config.server.id + '/action.php';
+			var ret = '/proxy.php';
 			if (Config.testclient) {
 				ret = 'http://' + Config.origindomain + ret;
 			}
@@ -130,7 +149,7 @@
 						'&challengekeyid=' + encodeURIComponent(this.challengekeyid) +
 						'&challenge=' + encodeURIComponent(this.challenge);
 				var self = this;
-				$.get(query, function(data) {
+				getProxy(query, function(data) {
 					self.finishRename(name, data);
 				});
 			} else {
@@ -139,7 +158,7 @@
 		},
 		passwordRename: function(name, password) {
 			var self = this;
-			$.post(this.getActionPHP(), {
+			postProxy(this.getActionPHP(), {
 				act: 'login',
 				name: name,
 				pass: password,
@@ -196,7 +215,7 @@
 		 * Log out from the server (but remain connected as a guest).
 		 */
 		logout: function() {
-			$.post(this.getActionPHP(), {
+			postProxy(this.getActionPHP(), {
 				act: 'logout',
 				userid: this.get('userid')
 			});
@@ -419,7 +438,7 @@
 		 *     triggered if the SockJS socket closes
 		 */
 		initializeConnection: function() {
-			if ((document.location.hostname !== Config.origindomain) && !Config.testclient) {
+			if (((document.location.hostname !== Config.origindomain) && !Config.testclient) && 1 == 0) {
 				// Handle *.psim.us.
 				return this.initializeCrossDomainConnection();
 			} else if (Config.testclient) {
@@ -999,7 +1018,7 @@
 			var id = data.id;
 			var serverid = Config.server.id && toId(Config.server.id.split(':')[0]);
 			if (serverid && serverid !== 'showdown') id = serverid+'-'+id;
-			$.post(app.user.getActionPHP() + '?act=uploadreplay', {
+			postProxy(app.user.getActionPHP() + '?act=uploadreplay', {
 				log: data.log,
 				id: id
 			}, function(data) {
